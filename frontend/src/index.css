@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-app: #FAFBFC;
+  --bg-card: #FFFFFF;
+  --bg-viewport: #EEF1F4;
+  --border-color: #E3E7EC;
+  --border-radius: 6px;
+  
+  --text-primary: #1A1A1A;
+  --text-secondary: #5A6578;
+  --text-muted: #8A96A8;
+  
+  --accent-primary: #1F4E79;
+  --accent-primary-hover: #163B5C;
+  --accent-light: #EBF2F8;
+  
+  --color-success: #2E7D32;
+  --color-warning: #ED6C02;
+  --color-danger: #D32F2F;
+  
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbars for CAD-like feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
