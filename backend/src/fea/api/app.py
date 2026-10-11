@@ -26,6 +26,8 @@ app.include_router(api_router, prefix="/api")
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
 async def root():
     return {
         "service": "Nonlinear FEA Studio",
