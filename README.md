@@ -62,36 +62,36 @@ Traditional design codes and linear solvers operate under small-strain, small-di
 ```mermaid
 flowchart TD
     subgraph Preprocessing ["1. Preprocessing & Model Definition"]
-        A[CAD Geometry / Nodal Mesh] --> B[Material & Constitutive Selection]
-        B --> C[Boundary Conditions & Loading]
+        A["CAD Geometry / Nodal Mesh"] --> B["Material & Constitutive Selection"]
+        B --> C["Boundary Conditions & Loading"]
     end
 
     subgraph CoreSolvers ["2. Numerical Physics Engines"]
-        C --> D{Analysis Type}
-        D -->|Static Large Strain| E[Total Lagrangian Newton-Raphson]
-        D -->|Snap-Through / Snap-Back| F[Crisfield Arc-Length Continuation]
-        D -->|Plastic Yield & Damage| G[Radial Return J2 Plasticity + Lemaitre Damage]
-        D -->|Body Interaction| H[Augmented-Lagrangian Contact]
-        D -->|Dynamic / Slamming| I[Explicit Central Difference + Added-Mass FSI]
-        D -->|Weight Minimization| J[SIMP Topology Optimization + MMA Filter]
-        D -->|Lattice / Composite| K[FE² Asymptotic Homogenization]
+        C --> D{"Analysis Type"}
+        D -->|Static Large Strain| E["Total Lagrangian Newton-Raphson"]
+        D -->|Snap-Through / Snap-Back| F["Crisfield Arc-Length Continuation"]
+        D -->|Plastic Yield & Damage| G["Radial Return J2 Plasticity + Lemaitre Damage"]
+        D -->|Body Interaction| H["Augmented-Lagrangian Contact"]
+        D -->|Dynamic / Slamming| I["Explicit Central Difference + Added-Mass FSI"]
+        D -->|Weight Minimization| J["SIMP Topology Optimization + MMA Filter"]
+        D -->|Lattice / Composite| K["FE² Asymptotic Homogenization"]
     end
 
     subgraph Acceleration ["3. Acceleration & Post-Processing"]
-        E & F --> L[Snapshot Collection & SVD]
-        L --> M[POD-Galerkin ROM Basis]
-        G --> N[Stress History Extraction]
-        N --> O[ASTM E1049 Rainflow Cycle Counting]
-        O --> P[Probabilistic Reliability Index beta t]
-        E --> Q[ZZ Superconvergent Patch Recovery AMR]
+        E & F --> L["Snapshot Collection & SVD"]
+        L --> M["POD-Galerkin ROM Basis"]
+        G --> N["Stress History Extraction"]
+        N --> O["ASTM E1049 Rainflow Cycle Counting"]
+        O --> P["Probabilistic Reliability Index beta(t)"]
+        E --> Q["ZZ Superconvergent Patch Recovery AMR"]
     end
 
     subgraph Visualization ["4. Interactive 3D Studio & Export"]
-        M & J & K & P --> R[Three.js 3D WebGL Canvas]
-        R --> S[Stress / Displacement Heatmaps]
-        R --> T[Deformed Mesh Animation Scrubbing]
-        R --> U[Recharts Equilibrium Path Curves]
-        R --> V[JSON / Gmsh / VTK Export]
+        M & J & K & P --> R["Three.js 3D WebGL Canvas"]
+        R --> S["Stress / Displacement Heatmaps"]
+        R --> T["Deformed Mesh Animation Scrubbing"]
+        R --> U["Recharts Equilibrium Path Curves"]
+        R --> V["JSON / Gmsh / VTK Export"]
     end
 ```
 
@@ -148,7 +148,7 @@ $$
 \mathbf{K}_T \Delta \mathbf{u} = \mathbf{R} = \mathbf{P}_{ext} - \mathbf{F}_{int}
 $$
 
-The tangent stiffness matrix $\mathbf{K}_T$ decomposes into material stiffness $\mathbf{K}_0$ and geometric (initial stress) stiffness $\mathbf{K}_\sigma$:
+The global tangent stiffness matrix decomposes into material stiffness and geometric (initial stress) stiffness contributions:
 
 $$
 \mathbf{K}_T = \mathbf{K}_0(\mathbf{u}) + \mathbf{K}_\sigma(\mathbf{S})
@@ -168,13 +168,13 @@ Standard load-controlled Newton-Raphson solvers fail near critical limit points 
 
 ```mermaid
 graph LR
-    A[Load Step n] --> B[Predictor Step along Tangent]
-    B --> C[Compute Incremental Residual R]
-    C --> D[Orthogonal Arc-Length Constraint]
-    D --> E{Residual Norm < Tol?}
-    E -->|No| F[Corrector Iteration]
+    A["Load Step n"] --> B["Predictor Step along Tangent"]
+    B --> C["Compute Incremental Residual R"]
+    C --> D["Orthogonal Arc-Length Constraint"]
+    D --> E{"Residual Norm < Tol?"}
+    E -->|No| F["Corrector Iteration"]
     F --> C
-    E -->|Yes| G[Update Equilibrium State & Advance ds]
+    E -->|Yes| G["Update Equilibrium State & Advance ds"]
 ```
 
 #### Crisfield Cylindrical Arc-Length Formulation
@@ -252,33 +252,39 @@ $$
 $$
 
 #### Radial Return Mapping Algorithm
+
 Given strain increment $\Delta \boldsymbol{\varepsilon}$:
 
 ##### Step 1: Elastic Trial State
+
 $$
-\boldsymbol{\sigma}^{tr} = \boldsymbol{\sigma}_n + \mathbf{C}^e : \Delta \boldsymbol{\varepsilon}
+\boldsymbol{\sigma}^{\text{tr}} = \boldsymbol{\sigma}_n + \mathbf{C}^e : \Delta \boldsymbol{\varepsilon}
 $$
 
 $$
-\mathbf{s}^{tr} = \boldsymbol{\sigma}^{tr} - \frac{1}{3}\text{tr}(\boldsymbol{\sigma}^{tr})\mathbf{I}, \quad \boldsymbol{\xi}^{tr} = \mathbf{s}^{tr} - \boldsymbol{\alpha}_n
+\mathbf{s}^{\text{tr}} = \boldsymbol{\sigma}^{\text{tr}} - \frac{1}{3}\text{tr}(\boldsymbol{\sigma}^{\text{tr}})\mathbf{I}, \quad \boldsymbol{\xi}^{\text{tr}} = \mathbf{s}^{\text{tr}} - \boldsymbol{\alpha}_n
 $$
 
 ##### Step 2: Yield Criterion Evaluation
+
 $$
-f^{tr} = \sqrt{\frac{3}{2}} \| \boldsymbol{\xi}^{tr} \| - \sigma_y(\bar{\varepsilon}_n^p)
+f^{\text{tr}} = \sqrt{\frac{3}{2}} \| \boldsymbol{\xi}^{\text{tr}} \| - \sigma_y(\bar{\varepsilon}_n^p)
 $$
 
-If $f^{tr} \le 0$, the step is elastic ($\Delta \gamma = 0$).
+When $f^{\text{tr}} \le 0$, the deformation step is purely elastic ($\Delta \gamma = 0$).
 
 ##### Step 3: Plastic Consistency Correction
-If $f^{tr} > 0$, plastic flow occurs with consistency parameter:
+
+When $f^{\text{tr}} > 0$, plastic flow occurs with consistency parameter $\Delta \gamma$:
+
 $$
-\Delta \gamma = \frac{f^{tr}}{3\mu + H_{iso} + H_{kin}}
+\Delta \gamma = \frac{f^{\text{tr}}}{3\mu + H_{iso} + H_{kin}}
 $$
 
 Stress tensor and internal state variable updates:
+
 $$
-\mathbf{n} = \frac{\boldsymbol{\xi}^{tr}}{\| \boldsymbol{\xi}^{tr} \|}, \quad \boldsymbol{\sigma}_{n+1} = \boldsymbol{\sigma}^{tr} - 2\mu \Delta \gamma \mathbf{n}
+\mathbf{n} = \frac{\boldsymbol{\xi}^{\text{tr}}}{\| \boldsymbol{\xi}^{\text{tr}} \|}, \quad \boldsymbol{\sigma}_{n+1} = \boldsymbol{\sigma}^{\text{tr}} - 2\mu \Delta \gamma \mathbf{n}
 $$
 
 $$
@@ -354,13 +360,13 @@ Discretization error is quantified a posteriori using the Superconvergent Patch 
 
 ```mermaid
 graph TD
-    A[Raw FE Stress Field sigma_h] --> B[Zienkiewicz-Zhu Patch Recovery]
-    B --> C[Continuous Smoothed Stress sigma*]
-    C --> D[Energy-Norm Error Integral ||e||_U]
-    D --> E{Relative Error eta <= Target?}
-    E -->|Yes| F[Mesh Converged]
-    E -->|No| G[Element h-Refinement Sub-division]
-    G --> H[Re-run Nonlinear Solver]
+    A["Raw FE Stress Field (sigma_h)"] --> B["Zienkiewicz-Zhu Patch Recovery"]
+    B --> C["Continuous Smoothed Stress (sigma*)"]
+    C --> D["Energy-Norm Error Integral norm(e)"]
+    D --> E{"Relative Error eta <= Target?"}
+    E -->|Yes| F["Mesh Converged"]
+    E -->|No| G["Element h-Refinement Sub-division"]
+    G --> H["Re-run Nonlinear Solver"]
     H --> A
 ```
 
@@ -436,9 +442,9 @@ Periodic cellular lattice infills and fiber-reinforced composite plies exhibit m
 
 ```mermaid
 graph LR
-    A[Macroscale Element Gauss Point] -->|Deformation Gradient F_macro| B[Periodic RVE Unit Cell]
-    B -->|Periodic BCs + Numerical Solve| C[Microscale Stress Equilibrium]
-    C -->|Homogenization Volume Average| D[Effective Constitutive Tensor C_eff]
+    A["Macroscale Element Gauss Point"] -->|Deformation Gradient F_macro| B["Periodic RVE Unit Cell"]
+    B -->|Periodic BCs + Numerical Solve| C["Microscale Stress Equilibrium"]
+    C -->|Homogenization Volume Average| D["Effective Constitutive Tensor C_eff"]
     D -->|Return to Macro Solver| A
 ```
 
@@ -462,16 +468,19 @@ $$
 The effective properties are verified against rigorous continuum bounds:
 
 ##### Voigt Upper Bound (Iso-Strain)
+
 $$
 \mathbf{C}_V = \sum_{m} V_m \mathbf{C}_m
 $$
 
 ##### Reuss Lower Bound (Iso-Stress)
+
 $$
 \mathbf{C}_R = \left( \sum_{m} V_m \mathbf{C}_m^{-1} \right)^{-1}
 $$
 
 ##### Hashin-Shtrikman Bounds for Bulk Modulus
+
 $$
 K_{HS}^- = K_1 + \frac{V_2}{\frac{1}{K_2 - K_1} + \frac{3 V_1}{3K_1 + 4G_1}}
 $$
@@ -526,11 +535,11 @@ To achieve real-time, interactive exploration of structural parameters without r
 
 ```mermaid
 graph TD
-    A[Offline: Full Nonlinear FE Trajectories] --> B[Snapshot Matrix S = u1, u2, ..., uN]
-    B --> C[Singular Value Decomposition S = U Sigma V^T]
-    C --> D[Optimal Reduced Basis Phi_r]
-    D --> E[Online: Galerkin Projection K_r = Phi^T K Phi]
-    E --> F[Sub-millisecond Real-Time Load Sliders]
+    A["Offline: Full Nonlinear FE Trajectories"] --> B["Snapshot Matrix S = [u1, u2, ..., uN]"]
+    B --> C["Singular Value Decomposition S = U Sigma V^T"]
+    C --> D["Optimal Reduced Basis Phi_r"]
+    D --> E["Online: Galerkin Projection K_r = Phi^T K Phi"]
+    E --> F["Sub-millisecond Real-Time Load Sliders"]
 ```
 
 #### Snapshot Matrix & SVD
