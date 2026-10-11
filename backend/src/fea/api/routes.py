@@ -6,6 +6,7 @@ Exposes endpoints for mesh models, solves, real-time WebSocket streaming, and re
 from typing import Dict, List, Any, Optional
 import json
 import asyncio
+import numpy as np
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 
@@ -26,23 +27,23 @@ SOLVES_DB: Dict[str, Any] = {}
 
 
 class ModelDefinition(BaseModel):
-    id: str = Field(..., example="cantilever_beam_01")
-    nodes: List[List[float]] = Field(..., example=[[0.0, 0.0], [1.0, 0.0], [1.0, 0.5], [0.0, 0.5]])
-    elements: List[List[int]] = Field(..., example=[[0, 1, 2, 3]])
+    id: str = Field(..., json_schema_extra={"example": "cantilever_beam_01"})
+    nodes: List[List[float]] = Field(..., json_schema_extra={"example": [[0.0, 0.0], [1.0, 0.0], [1.0, 0.5], [0.0, 0.5]]})
+    elements: List[List[int]] = Field(..., json_schema_extra={"example": [[0, 1, 2, 3]]})
     materials: Dict[str, Any] = Field(default_factory=lambda: {"E": 210e9, "nu": 0.3, "thickness": 0.01, "density": 7850.0})
     bcs: Dict[str, Any] = Field(default_factory=lambda: {"fixed_dofs": [0, 1, 6, 7], "prescribed_loads": {"3": -10000.0}})
 
 
 class SolveRequest(BaseModel):
     model_id: str
-    solve_type: str = Field("nonlinear_static", example="nonlinear_static")  # arc_length, buckling, explicit, topopt, homogenization, fatigue
+    solve_type: str = Field("nonlinear_static", json_schema_extra={"example": "nonlinear_static"})  # arc_length, buckling, explicit, topopt, homogenization, fatigue
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
 @router.post("/models")
 async def create_model(model: ModelDefinition):
     """Store FE model definition."""
-    MODELS_DB[model.id] = model.dict()
+    MODELS_DB[model.id] = model.model_dump()
     return {"status": "created", "model_id": model.id, "nodes_count": len(model.nodes), "elements_count": len(model.elements)}
 
 
