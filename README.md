@@ -1,9 +1,12 @@
 # Nonlinear FEA Studio (`nonlinear-fea-studio`)
 
-[![CI Pipeline](https://github.com/DNV-Portfolio/nonlinear-fea-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/DNV-Portfolio/nonlinear-fea-studio/actions)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-success?style=for-the-badge&logo=vercel)](https://nonlinear-fea-studio.vercel.app)
+[![CI Pipeline](https://github.com/10tan/nonlinear-fea-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/10tan/nonlinear-fea-studio/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![React 18](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+
+🚀 **Live Production WebGL App**: [https://nonlinear-fea-studio.vercel.app](https://nonlinear-fea-studio.vercel.app)
 
 **Project 2 — Nonlinear, Multiscale Computational Structural Mechanics Framework**  
 *Portfolio Blueprint for Advanced Engineering & Research Roles (DNV / Classification Societies / Research Labs Alignment)*
