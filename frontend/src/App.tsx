@@ -120,7 +120,11 @@ export const App: React.FC = () => {
     setSolverLogs(prev => [...prev, `[SOLVE START] Submitting ${moduleType.toUpperCase()} job to FastAPI backend...`]);
 
     try {
-      const response = await fetch('http://localhost:8000/solves', {
+      const apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '5173'
+        ? 'http://localhost:8000/api/solves'
+        : '/api/solves';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
